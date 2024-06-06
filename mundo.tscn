@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3 uid="uid://bti1lnagds37"]
+[gd_scene load_steps=11 format=3 uid="uid://bti1lnagds37"]
 
 [ext_resource type="PackedScene" uid="uid://o63gaceeoooj" path="res://planet_1.tscn" id="1_qitxh"]
 [ext_resource type="PackedScene" uid="uid://d3ba0p3qtrfov" path="res://esfera.tscn" id="2_k11wt"]
@@ -19,9 +19,6 @@ sky = SubResource("Sky_l2tki")
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_udars"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_nw10b"]
-
-[sub_resource type="PlaneMesh" id="PlaneMesh_fw6a5"]
-size = Vector2(20, 20)
 
 [node name="Mundo" type="Node3D"]
 
@@ -72,7 +69,3 @@ mesh = SubResource("BoxMesh_nw10b")
 [node name="MeshInstance3D4" type="MeshInstance3D" parent="CharacterBody3D"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.057333, 1.28678, -0.71909)
 mesh = SubResource("BoxMesh_nw10b")
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.39989, 5.91802, 0)
-mesh = SubResource("PlaneMesh_fw6a5")
