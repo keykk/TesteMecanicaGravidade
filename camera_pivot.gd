@@ -94,7 +94,7 @@ func rotate_camera(delta):
 	camera_rotation += input.limit_length(1.0) * 4
 	target_rotation += input_target.limit_length(1.0) * 1
 	target_rotation.y = clamp(target_rotation.y, -10, 10)
-	camera_rotation.x = clamp(camera_rotation.x, -VERTICAL_LIMIT, VERTICAL_LIMIT)
+	camera_rotation.x = clamp(camera_rotation.x, -VERTICAL_LIMIT, 30)
 	update_player_rotation()
 
 
