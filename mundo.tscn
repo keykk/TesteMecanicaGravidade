@@ -42,14 +42,12 @@ script = ExtResource("4_p375k")
 target = NodePath("../CharacterBody3D")
 
 [node name="camera" type="Camera3D" parent="camera_pivot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 
-[node name="CharacterBody3D" type="CharacterBody3D" parent="." node_paths=PackedStringArray("camera_view")]
+[node name="CharacterBody3D" type="CharacterBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0, 1)
 up_direction = Vector3(0, -1, 0)
 platform_on_leave = 2
 script = ExtResource("3_bs063")
-camera_view = NodePath("../camera_pivot")
 planet_path = NodePath("../planet1")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="CharacterBody3D"]

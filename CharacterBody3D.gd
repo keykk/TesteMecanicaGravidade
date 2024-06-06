@@ -13,15 +13,10 @@ var input_map = {
 	"camera_down":[KEY_K],
 	"attack_1":[MOUSE_BUTTON_LEFT]
 }
-@export var camera_view: Node3D
 @export_subgroup("Properties")
 @export var movement_speed: int = 250
 @export var jump_strength: int = 10
-@onready var planet_1 = $"../planet1"
 
-const SPEED = 5.0
-const JUMP_VELOCITY = 4.5
-@onready var node_3d = $"../Node3D"
 @export var planet_path : NodePath
 
 # Get the gravity from the project settings to be synced with RigidBody nodes.
@@ -46,8 +41,6 @@ var move_dir: Vector3 = Vector3.ZERO
 var up_dir: Vector3
 var current_forward: Vector3
 var orientation: Basis
-
-var projected_position: Vector3 = Vector3.ZERO
 var planet_direction: Vector3 = Vector3.ZERO
 
 func _ready():
@@ -62,11 +55,7 @@ func _physics_process(delta):
 	velocity += gravity_velocity
 	up_direction = -gravity.normalized()
 	
-
 	move_and_slide()
-	
-	projected_position = get_projected_position_on_planet()
-	planet_direction = gravity.normalized()
 	
 	
 func apply_gravity(delta) -> void:
@@ -99,7 +88,7 @@ func handle_controls(delta) -> void:
 	forward_dir = -transform.basis.z
 
 	move_dir = (forward_dir * input_direction.x + right_dir * input_direction.y).normalized()
-	#move_dir = move_dir.rotated(Vector3.UP, camera_view.rotation.y).normalized()
+	
 	velocity = move_dir * movement_speed * delta
 	
 	if Input.is_action_just_pressed("jump"):
@@ -112,7 +101,6 @@ func handle_controls(delta) -> void:
 	
 
 func handle_orientation(delta) -> void:
-	#update_player_rotation()
 	# Step 1: Align the player with the planet
 	up_dir = -gravity.normalized()
 	current_forward = global_transform.basis.z # This might cause the resetting while leaving keys
@@ -200,18 +188,3 @@ func get_projected_position_on_planet() -> Vector3:
 		var planet_radius = sphere_node.scale.x * 0.5  # Assuming the planet is a perfect sphere with diameter = scale.x
 		return sphere_node.global_transform.origin + normalized_dir * planet_radius
 	return Vector3.ZERO
-	
-func update_player_rotation():
-	# Pegar a base atual do jogador
-	var player_transform = global_transform
-	
-	# Criar uma nova base para rotação horizontal
-	var rotation_transform = Transform3D()
-	rotation_transform.basis = Basis()
-	rotation_transform.basis = rotation_transform.basis.rotated(Vector3(0, 1, 0), deg_to_rad(camera_view.camera_rotation.y))
-	
-	# Aplicar a rotação horizontal ao jogador mantendo a orientação vertical
-	player_transform.basis = rotation_transform.basis * player_transform.basis
-	
-	# Atualizar a transformação global do jogador
-	global_transform = player_transform
