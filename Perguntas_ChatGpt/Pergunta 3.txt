@@ -1,0 +1,91 @@
+Funcionou, porém , como limito a rotação com o mouse, para que o player não consiga completar uma volta inteira 
+
+
+Para limitar a rotação da câmera com o mouse, especialmente no eixo vertical (para evitar que o jogador consiga fazer uma volta completa), você pode restringir o valor de camera_rotation.x a um intervalo específico. Um intervalo comum para a rotação vertical é entre -90 e 90 graus, que evita que a câmera vire de cabeça para baixo.
+
+Aqui está uma modificação no código para implementar essa limitação:
+
+
+
+extends Camera
+
+# Referências para o jogador e o planeta
+onready var player = get_node("path/to/player")
+onready var planet = get_node("path/to/planet")
+
+# Sensibilidade do mouse
+var mouse_sensitivity = 0.1
+
+# Armazenar a rotação da câmera
+var camera_rotation = Vector3.ZERO
+
+# Limites para a rotação vertical da câmera
+const VERTICAL_LIMIT = 85  # Limite em graus
+
+# Atualizar a câmera a cada frame
+func _process(delta):
+    update_camera(delta)
+
+# Processar eventos de entrada do mouse
+func _input(event):
+    if event is InputEventMouseMotion:
+        var mouse_movement = event.relative
+        var input := Vector3.ZERO
+        input.x = (mouse_movement.y * mouse_sensitivity) * -1
+        input.y = (mouse_movement.x * mouse_sensitivity) * -1
+        camera_rotation += input.limit_length(1.0) * 4
+        
+        # Limitar a rotação vertical da câmera
+        camera_rotation.x = clamp(camera_rotation.x, -VERTICAL_LIMIT, VERTICAL_LIMIT)
+
+func update_camera(delta):
+    # Posição do jogador e do planeta
+    var player_position = player.global_transform.origin
+    var planet_position = planet.global_transform.origin
+    
+    # Vetor da direção do planeta para o jogador
+    var to_player = (player_position - planet_position).normalized()
+    
+    # Calcular a nova orientação da câmera
+    var target_orientation = Transform()
+    target_orientation.origin = global_transform.origin  # Manter a posição da câmera
+    target_orientation.basis = Basis()  # Resetar a base
+    
+    # Definir o eixo "up" da câmera como o vetor de direção do planeta para o jogador
+    target_orientation.basis.y = to_player
+    
+    # Definir o eixo "forward" da câmera como a direção que o jogador está olhando
+    target_orientation.basis.z = (player.global_transform.basis.z).normalized()
+    
+    # Corrigir o eixo "x" com um produto vetorial para manter a ortogonalidade
+    target_orientation.basis.x = target_orientation.basis.y.cross(target_orientation.basis.z).normalized()
+    
+    # Recalcular o eixo "z" para garantir a ortogonalidade
+    target_orientation.basis.z = target_orientation.basis.x.cross(target_orientation.basis.y).normalized()
+    
+    # Interpolar suavemente a rotação da câmera
+    global_transform.basis = global_transform.basis.slerp(target_orientation.basis, 0.18)
+    
+    # Aplicar a rotação do mouse
+    apply_mouse_rotation()
+
+func apply_mouse_rotation():
+    var rotation_transform = Transform()
+    rotation_transform.basis = Basis()
+    rotation_transform.basis = rotation_transform.basis.rotated(Vector3(1, 0, 0), deg2rad(camera_rotation.x))
+    rotation_transform.basis = rotation_transform.basis.rotated(Vector3(0, 1, 0), deg2rad(camera_rotation.y))
+    
+    # Aplicar a rotação adicional à câmera
+    global_transform.basis = global_transform.basis * rotation_transform.basis
+
+
+
+Explicação:
+Limitação da rotação vertical:
+
+A constante VERTICAL_LIMIT é definida para 85 graus. Isso permite uma rotação de -85 a 85 graus.
+Após atualizar camera_rotation com a entrada do mouse, a rotação vertical (camera_rotation.x) é limitada usando a função clamp(camera_rotation.x, -VERTICAL_LIMIT, VERTICAL_LIMIT).
+Aplicação da rotação limitada:
+
+A rotação limitada é aplicada na função apply_mouse_rotation(), garantindo que a câmera nunca vire de cabeça para baixo.
+Essa abordagem deve manter a rotação da câmera dentro de limites razoáveis, proporcionando uma experiência de controle mais natural.

@@ -1,0 +1,92 @@
+Deu certo, porém a camera ficou presa, utilizo o seguinte código para movimentar a camera "if event is InputEventMouseMotion:
+		var mouse_movement = event.relative
+		#
+		var input := Vector3.ZERO
+		input.x = (mouse_movement.y * mouse_sensitivity) * -1
+		input.y = (mouse_movement.x * mouse_sensitivity) * -1
+	
+		camera_rotation += input.limit_length(1.0) * 4"
+
+
+
+Para manter a capacidade de movimentar a câmera com o mouse enquanto garante que a orientação da câmera siga a superfície do planeta corretamente, você pode combinar a lógica atual de movimentação da câmera com a nova orientação calculada.
+
+A ideia é aplicar a movimentação do mouse após calcular a orientação básica da câmera em relação ao planeta. Isso mantém a câmera orientada corretamente em relação ao jogador, mas permite que o jogador mova a câmera livremente em torno do personagem.
+
+Aqui está um exemplo de como você pode fazer isso:
+
+
+
+extends Camera
+
+# Referências para o jogador e o planeta
+onready var player = get_node("path/to/player")
+onready var planet = get_node("path/to/planet")
+
+# Sensibilidade do mouse
+var mouse_sensitivity = 0.1
+
+# Armazenar a rotação da câmera
+var camera_rotation = Vector3.ZERO
+
+# Atualizar a câmera a cada frame
+func _process(delta):
+    update_camera(delta)
+
+# Processar eventos de entrada do mouse
+func _input(event):
+    if event is InputEventMouseMotion:
+        var mouse_movement = event.relative
+        var input := Vector3.ZERO
+        input.x = (mouse_movement.y * mouse_sensitivity) * -1
+        input.y = (mouse_movement.x * mouse_sensitivity) * -1
+        camera_rotation += input.limit_length(1.0) * 4
+
+func update_camera(delta):
+    # Posição do jogador e do planeta
+    var player_position = player.global_transform.origin
+    var planet_position = planet.global_transform.origin
+    
+    # Vetor da direção do planeta para o jogador
+    var to_player = (player_position - planet_position).normalized()
+    
+    # Calcular a nova orientação da câmera
+    var target_orientation = Transform()
+    target_orientation.origin = global_transform.origin  # Manter a posição da câmera
+    target_orientation.basis = Basis()  # Resetar a base
+    
+    # Definir o eixo "up" da câmera como o vetor de direção do planeta para o jogador
+    target_orientation.basis.y = to_player
+    
+    # Definir o eixo "forward" da câmera como a direção que o jogador está olhando
+    target_orientation.basis.z = (player.global_transform.basis.z).normalized()
+    
+    # Corrigir o eixo "x" com um produto vetorial para manter a ortogonalidade
+    target_orientation.basis.x = target_orientation.basis.y.cross(target_orientation.basis.z).normalized()
+    
+    # Recalcular o eixo "z" para garantir a ortogonalidade
+    target_orientation.basis.z = target_orientation.basis.x.cross(target_orientation.basis.y).normalized()
+    
+    # Interpolar suavemente a rotação da câmera
+    global_transform.basis = global_transform.basis.slerp(target_orientation.basis, 0.18)
+    
+    # Aplicar a rotação do mouse
+    apply_mouse_rotation()
+
+func apply_mouse_rotation():
+    var rotation_transform = Transform()
+    rotation_transform.basis = Basis()
+    rotation_transform.basis = rotation_transform.basis.rotated(Vector3(1, 0, 0), deg2rad(camera_rotation.x))
+    rotation_transform.basis = rotation_transform.basis.rotated(Vector3(0, 1, 0), deg2rad(camera_rotation.y))
+    
+    # Aplicar a rotação adicional à câmera
+    global_transform.basis = global_transform.basis * rotation_transform.basis
+
+
+
+
+Explicação:
+Entrada do mouse: No método _input(event), o código captura os movimentos do mouse e ajusta a camera_rotation.
+Orientação básica da câmera: A orientação da câmera é calculada para seguir a superfície do planeta, conforme explicado anteriormente.
+Aplicar rotação do mouse: A rotação do mouse é aplicada à câmera após a orientação básica ser calculada. Isso é feito criando uma nova transformação (rotation_transform) baseada nos valores de camera_rotation e multiplicando a base da câmera pela transformação de rotação do mouse.
+Com esta abordagem, a câmera seguirá a superfície do planeta, mantendo a capacidade de rotação livre controlada pelo mouse.

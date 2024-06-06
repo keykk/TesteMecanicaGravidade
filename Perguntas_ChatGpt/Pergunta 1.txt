@@ -1,0 +1,63 @@
+No meu jogo godot, tenho um planeta pequeno e com gravidade, e o player, quando anda pelo planeta, fazendo uma rotação acompanha a gravidade, e a camera segue o player rotacionando corretamente, conforme o valor armazenado em target "global_transform.basis = target.orientation" e eu permito que o player rotacione a camera, porém quando o personagem esta em baixo ou na lateral do planeta , a rotação da camera fica invertida "rotation_degrees = rotation_degrees.lerp(camera_rotation, 0.18)" como resolver ?
+
+Para resolver o problema da rotação invertida da câmera quando o personagem está em posições diferentes ao redor do planeta, precisamos ajustar a forma como a rotação da câmera é calculada. A solução envolve o uso de vetores de direção e a transformação adequada para garantir que a câmera mantenha uma orientação consistente em relação ao jogador e ao planeta.
+
+Aqui está uma abordagem que pode ajudar:
+
+Alinhar a câmera com a superfície do planeta: A câmera deve sempre olhar para o jogador a partir de uma posição que seja consistente com a superfície do planeta. Isso pode ser feito ajustando a orientação da câmera com base na posição do jogador e do centro do planeta.
+
+Calcular a direção da câmera: Em vez de usar diretamente a rotação da câmera, você pode calcular a direção da câmera com base na posição do jogador e na orientação do planeta.
+
+Interpolar suavemente a rotação da câmera: Utilizar interpolação (lerp) para suavizar a transição da rotação da câmera.
+
+Aqui está um exemplo de como você pode implementar isso no Godot:
+
+
+
+extends Camera
+
+# Referências para o jogador e o planeta
+onready var player = get_node("path/to/player")
+onready var planet = get_node("path/to/planet")
+
+# Atualizar a câmera a cada frame
+func _process(delta):
+    update_camera(delta)
+
+func update_camera(delta):
+    # Posição do jogador e do planeta
+    var player_position = player.global_transform.origin
+    var planet_position = planet.global_transform.origin
+    
+    # Vetor da direção do planeta para o jogador
+    var to_player = (player_position - planet_position).normalized()
+    
+    # Calcular a nova orientação da câmera
+    var target_orientation = Transform()
+    target_orientation.origin = global_transform.origin  # Manter a posição da câmera
+    target_orientation.basis = Basis()  # Resetar a base
+    
+    # Definir o eixo "up" da câmera como o vetor de direção do planeta para o jogador
+    target_orientation.basis.y = to_player
+    
+    # Definir o eixo "forward" da câmera como a direção que o jogador está olhando
+    target_orientation.basis.z = (player.global_transform.basis.z).normalized()
+    
+    # Corrigir o eixo "x" com um produto vetorial para manter a ortogonalidade
+    target_orientation.basis.x = target_orientation.basis.y.cross(target_orientation.basis.z).normalized()
+    
+    # Recalcular o eixo "z" para garantir a ortogonalidade
+    target_orientation.basis.z = target_orientation.basis.x.cross(target_orientation.basis.y).normalized()
+    
+    # Interpolar suavemente a rotação da câmera
+    global_transform.basis = global_transform.basis.slerp(target_orientation.basis, 0.18)
+
+
+
+Explicação:
+Posições: A posição do jogador e do planeta são obtidas.
+Direção do jogador ao planeta: O vetor normalizado to_player representa a direção do planeta para o jogador.
+Orientação da câmera: A orientação da câmera é ajustada com base na direção do planeta para o jogador (to_player). O eixo y da base é definido como to_player.
+Eixos ortogonais: Garantimos que os eixos da base (x, y, z) sejam ortogonais usando produtos vetoriais.
+Interpolação: Suavemente interpolamos a base da câmera para a nova orientação calculada usando slerp.
+Com este código, a câmera deve seguir o jogador de forma consistente, independentemente da posição ao redor do planeta, sem inversões de rotação inesperadas.
